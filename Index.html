@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Voice Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>🎤 Web Voice Assistant</h1>
+<button onclick="startListening()">Start Listening</button>
+
+<p><strong>You said:</strong> <span id="userText"></span></p>
+<p><strong>Assistant:</strong> <span id="assistantText"></span></p>
+
+<script>
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-IN";
+
+    function startListening() {
+        recognition.start();
+    }
+
+    recognition.onresult = function(event) {
+        const command = event.results[0][0].transcript;
+        document.getElementById("userText").innerText = command;
+
+        fetch("/command", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({command: command})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("assistantText").innerText = data.response;
+            speak(data.response);
+        });
+    };
+
+    function speak(text) {
+        const speech = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(speech);
+    }
+</script>
+
+</body>
+</html>
